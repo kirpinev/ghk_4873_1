@@ -3,7 +3,7 @@ import { recipe } from "@vanilla-extract/recipes";
 
 const container = style({
   display: "flex",
-  padding: "1rem",
+  paddingTop: "1rem",
   flexDirection: "column",
 });
 

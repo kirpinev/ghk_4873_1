@@ -120,6 +120,7 @@ export const App = () => {
           tag="h3"
           view="medium"
           className={appSt.productsTitle}
+          style={{ paddingLeft: "1rem", paddingRight: "1rem" }}
         >
           Деньги под рукой
         </Typography.TitleResponsive>
@@ -127,39 +128,43 @@ export const App = () => {
         <Typography.Text
           tag="p"
           view="primary-medium"
-          style={{ marginBottom: 0 }}
+          style={{ marginBottom: 0, paddingLeft: "1rem", paddingRight: "1rem" }}
         >
           Доступный лимит без процентов
         </Typography.Text>
 
         <Gap size={28} />
 
-        <Typography.Text tag="p" view="primary-small" weight="bold">
+        <Typography.Text
+          tag="p"
+          view="primary-small"
+          weight="bold"
+          style={{ paddingLeft: "1rem", paddingRight: "1rem" }}
+        >
           Выберите сумму и срок
         </Typography.Text>
 
-        <div style={{width:'100%'}}>
-
-        <SliderInput
-          block={true}
-          value={amount * 100}
-          sliderValue={amount}
-          onInputChange={handleSumInputChange}
-          onSliderChange={handleSumSliderChange}
-          onBlur={() => setAmount((prev) => clamp(prev, 100, 30_000))}
-          min={100}
-          max={30_000}
-          range={{ min: [100], max: [30_000] }}
-          pips={{
-            mode: "values",
-            values: [100, 30_000],
-            format: { to: formatPipsValue },
-          }}
-          step={1}
-          Input={AmountInput}
-          labelView="outer"
-          size={48}
-        />
+        <div style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
+          <SliderInput
+            block={true}
+            value={amount * 100}
+            sliderValue={amount}
+            onInputChange={handleSumInputChange}
+            onSliderChange={handleSumSliderChange}
+            onBlur={() => setAmount((prev) => clamp(prev, 100, 30_000))}
+            min={100}
+            max={30_000}
+            range={{ min: [100], max: [30_000] }}
+            pips={{
+              mode: "values",
+              values: [100, 30_000],
+              format: { to: formatPipsValue },
+            }}
+            step={1}
+            Input={AmountInput}
+            labelView="outer"
+            size={48}
+          />
         </div>
 
         <Gap size={28} />
@@ -191,7 +196,10 @@ export const App = () => {
 
         <Gap size={28} />
 
-        <div className={appSt.reminder}>
+        <div
+          className={appSt.reminder}
+          style={{ marginLeft: "1rem", marginRight: "1rem" }}
+        >
           <img src={star} width={24} height={24} alt="" />
           <Typography.Text
             tag="p"
@@ -226,11 +234,13 @@ export const App = () => {
               ) as Month;
               const result: Month[] = [];
 
-              [...months, currentMonth].forEach((m1) => {
-                if (!result.find((m2) => m2.number === m1.number)) {
-                  result.push(m1);
-                }
-              });
+              [...months.filter((cm) => !cm.isNew), currentMonth].forEach(
+                (m1) => {
+                  if (!result.find((m2) => m2.number === m1.number)) {
+                    result.push(m1);
+                  }
+                },
+              );
 
               setMonths([...result.sort((a, b) => a.number - b.number)]);
               setMonth(currentMonth);
@@ -300,7 +310,7 @@ export const App = () => {
                 view="primary-medium"
                 style={{ marginBottom: 0 }}
               >
-                {Math.floor(amount + commission).toLocaleString("ru-RU")} ₽
+                {Math.floor(amount / month.number).toLocaleString("ru-RU")} ₽
               </Typography.Text>
             </div>
             <div style={{ display: "flex", gap: "0.5rem" }}>
