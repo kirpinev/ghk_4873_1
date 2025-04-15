@@ -138,6 +138,8 @@ export const App = () => {
           Выберите сумму и срок
         </Typography.Text>
 
+        <div style={{width:'100%'}}>
+
         <SliderInput
           block={true}
           value={amount * 100}
@@ -147,7 +149,7 @@ export const App = () => {
           onBlur={() => setAmount((prev) => clamp(prev, 100, 30_000))}
           min={100}
           max={30_000}
-          range={{ min: 100, max: 30_000 }}
+          range={{ min: [100], max: [30_000] }}
           pips={{
             mode: "values",
             values: [100, 30_000],
@@ -158,6 +160,7 @@ export const App = () => {
           labelView="outer"
           size={48}
         />
+        </div>
 
         <Gap size={28} />
 
