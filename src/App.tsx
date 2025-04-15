@@ -18,6 +18,7 @@ import star from "./assets/star.png";
 import payment from "./assets/payment.png";
 import cal from "./assets/cal.png";
 import money from "./assets/money.png";
+import Picker, { PickerValue } from "react-mobile-picker";
 
 interface Month {
   text: string;
@@ -47,33 +48,41 @@ const standardMonths: Month[] = [
   { text: "18 мес.", isNumber: true, isNew: true, number: 18 },
 ];
 
+const selections: { [k: string]: number[] } = {
+  month: Array.from({ length: 18 }, (_, i) => i + 1),
+};
+
+const defaultMonths: Month[] = [
+  { text: "1 мес.", isNumber: true, isNew: false, number: 1 },
+  { text: "3 мес.", isNumber: true, isNew: false, number: 3 },
+  { text: "6 мес.", isNumber: true, isNew: false, number: 6 },
+  { text: "12 мес.", isNumber: true, isNew: false, number: 12 },
+  { text: "Другой", isNumber: true, isNew: false, number: 99 },
+];
+
 export const App = () => {
   const [loading, setLoading] = useState(false);
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState(10_000);
   const [thx, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
-  const [months, setMonths] = useState<Month[]>([
-    { text: "1 мес.", isNumber: true, isNew: false, number: 1 },
-    { text: "3 мес.", isNumber: true, isNew: false, number: 3 },
-    { text: "6 мес.", isNumber: true, isNew: false, number: 6 },
-    { text: "12 мес.", isNumber: true, isNew: false, number: 12 },
-    { text: "Другой", isNumber: true, isNew: false, number: 99 },
-  ]);
+  const [months, setMonths] = useState<Month[]>(defaultMonths);
   const [month, setMonth] = useState<Month>(months[0]);
-  const [modalMonth, setModalMonth] = useState<Month | null>();
-  const [paymentSum, setPaymentSum] = useState(0);
+  const [commission, setCommission] = useState(0);
+  const [pickerValue, setPickerValue] = useState<PickerValue>({
+    month: 1,
+  });
 
   const countSum = (amount: number, month: number) => {
-    setPaymentSum((amount / 1000) * 50 * month);
+    setCommission((amount / 1000) * 50 * month);
   };
 
   const submit = () => {
     setLoading(true);
     sendDataToGA({
       sum: amount,
-      payment: paymentSum,
+      payment: commission + amount,
       term: month.number,
-      commission: paymentSum + amount,
+      commission: commission,
     }).then(() => {
       setLoading(false);
       setThx(true);
@@ -135,13 +144,13 @@ export const App = () => {
           sliderValue={amount}
           onInputChange={handleSumInputChange}
           onSliderChange={handleSumSliderChange}
-          onBlur={() => setAmount((prev) => clamp(prev, 1, 30_000))}
-          min={1}
+          onBlur={() => setAmount((prev) => clamp(prev, 100, 30_000))}
+          min={100}
           max={30_000}
-          range={{ min: 1, max: 30_000 }}
+          range={{ min: 100, max: 30_000 }}
           pips={{
             mode: "values",
-            values: [1, 30_000],
+            values: [100, 30_000],
             format: { to: formatPipsValue },
           }}
           step={1}
@@ -165,7 +174,7 @@ export const App = () => {
                 setMonth((prev) => (m.number === 99 ? prev : m));
 
                 if (m.number === 99) {
-                  setModalOpen(true);
+                  setIsModalOpen(true);
                 }
               }}
               className={appSt.swSlide({
@@ -197,49 +206,43 @@ export const App = () => {
       <BottomSheet
         open={isModalOpen}
         onClose={() => {
-          setModalOpen(false);
+          setIsModalOpen(false);
         }}
+        title="Выберите срок"
+        hasCloser={true}
+        swipeable={false}
       >
         <div style={{ overflow: "hidden", width: "100%" }}>
-          <Typography.Text tag="p" view="primary-large" weight="bold">
-            Выберите срок
-          </Typography.Text>
+          <Picker
+            value={pickerValue}
+            onChange={(value) => {
+              setPickerValue(value);
 
-          <Swiper
-            style={{ marginLeft: "0" }}
-            spaceBetween={8}
-            slidesPerView="auto"
+              const currentMonth = standardMonths.find(
+                (cur) => cur.number === value.month,
+              ) as Month;
+              const result: Month[] = [];
+
+              [...months, currentMonth].forEach((m1) => {
+                if (!result.find((m2) => m2.number === m1.number)) {
+                  result.push(m1);
+                }
+              });
+
+              setMonths([...result.sort((a, b) => a.number - b.number)]);
+              setMonth(currentMonth);
+            }}
           >
-            {standardMonths.map((m) => (
-              <SwiperSlide
-                key={m.number}
-                onClick={() => {
-                  setModalOpen(false);
-
-                  const result: Month[] = [];
-
-                  [...months, m].forEach((m1) => {
-                    if (!result.find((m2) => m2.number === m1.number)) {
-                      result.push(m1);
-                    }
-                  });
-
-                  setMonths([
-                    ...result
-                      .filter((m3) => m3.number !== modalMonth?.number)
-                      .sort((a, b) => a.number - b.number),
-                  ]);
-                  setModalMonth(m);
-                  setMonth(m);
-                }}
-                className={appSt.swSlide({
-                  selected: m.text === month.text,
-                })}
-              >
-                {m.text}
-              </SwiperSlide>
+            {Object.keys(selections).map((name) => (
+              <Picker.Column key={name} name={name}>
+                {selections[name].map((option) => (
+                  <Picker.Item key={option} value={option}>
+                    {option}
+                  </Picker.Item>
+                ))}
+              </Picker.Column>
             ))}
-          </Swiper>
+          </Picker>
         </div>
       </BottomSheet>
 
@@ -294,7 +297,7 @@ export const App = () => {
                 view="primary-medium"
                 style={{ marginBottom: 0 }}
               >
-                {(amount + paymentSum).toLocaleString("ru-RU")} ₽
+                {Math.floor(amount + commission).toLocaleString("ru-RU")} ₽
               </Typography.Text>
             </div>
             <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -352,7 +355,7 @@ export const App = () => {
                   view="primary-medium"
                   style={{ marginBottom: 0 }}
                 >
-                  {paymentSum.toLocaleString("ru-RU")} ₽
+                  {Math.floor(commission).toLocaleString("ru-RU")} ₽
                 </Typography.Text>
               </div>
             </div>
