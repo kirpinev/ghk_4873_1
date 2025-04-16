@@ -122,7 +122,7 @@ export const App = () => {
           className={appSt.productsTitle}
           style={{ paddingLeft: "1rem", paddingRight: "1rem" }}
         >
-          Деньги под рукой
+          Альфа-лимит
         </Typography.TitleResponsive>
         <Gap size={8} />
         <Typography.Text
